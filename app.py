@@ -1,4 +1,4 @@
-from flask import Flask, request, session, redirect, url_for, render_template, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import boto3
 import uuid
@@ -10,10 +10,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# Load .env
+# Load environment variables
 load_dotenv()
 
-# Flask App Initialization
+# App Initialization
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'secret')
 
@@ -21,8 +21,6 @@ app.secret_key = os.getenv('SECRET_KEY', 'secret')
 REGION = os.getenv('AWS_REGION_NAME', 'us-east-1')
 USERS_TABLE_NAME = os.getenv('USERS_TABLE_NAME')
 ORDERS_TABLE_NAME = os.getenv('ORDERS_TABLE_NAME')
-ENABLE_SNS = os.getenv('ENABLE_SNS', 'False').lower() == 'true'
-SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN')
 
 # Email Config
 ENABLE_EMAIL = os.getenv('ENABLE_EMAIL', 'False').lower() == 'true'
@@ -31,13 +29,17 @@ SMTP_PORT = int(os.getenv('SMTP_PORT', 587))
 SENDER_EMAIL = os.getenv('SENDER_EMAIL')
 SENDER_PASSWORD = os.getenv('SENDER_PASSWORD')
 
+# SNS Config
+ENABLE_SNS = os.getenv('ENABLE_SNS', 'False').lower() == 'true'
+SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN')
+
 # AWS Resources
 dynamodb = boto3.resource('dynamodb', region_name=REGION)
 users_table = dynamodb.Table(USERS_TABLE_NAME)
 orders_table = dynamodb.Table(ORDERS_TABLE_NAME)
 sns_client = boto3.client('sns', region_name=REGION)
 
-# Logging
+# Logging Setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,7 @@ products = {
 # Helper Functions
 def send_email(to_email, subject, body):
     if not ENABLE_EMAIL:
-        logger.info("[Email Skipped] " + subject)
+        logger.info(f"[Email Skipped] To: {to_email}, Subject: {subject}")
         return
     try:
         msg = MIMEMultipart()
@@ -74,14 +76,13 @@ def send_email(to_email, subject, body):
         server.login(SENDER_EMAIL, SENDER_PASSWORD)
         server.sendmail(SENDER_EMAIL, to_email, msg.as_string())
         server.quit()
-
         logger.info(f"Email sent to {to_email}")
     except Exception as e:
-        logger.error("Email sending failed: " + str(e))
+        logger.error(f"Email sending failed: {e}")
 
 def publish_to_sns(message, subject="New Order"):
-    if not ENABLE_SNS:
-        logger.info("[SNS Skipped] " + message)
+    if not ENABLE_SNS or not SNS_TOPIC_ARN:
+        logger.info("[SNS Skipped]")
         return
     try:
         sns_client.publish(
@@ -89,21 +90,9 @@ def publish_to_sns(message, subject="New Order"):
             Message=message,
             Subject=subject
         )
-        logger.info("SNS message published.")
+        logger.info("SNS notification sent.")
     except Exception as e:
-        logger.error("SNS publish failed: " + str(e))
-
-def require_role(role='user'):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            if 'user' not in session:
-                flash("Login required", "warning")
-                return redirect(url_for('login'))
-            # You can add more checks if you store roles in DynamoDB
-            return func(*args, **kwargs)
-        wrapper.__name__ = func.__name__
-        return wrapper
-    return decorator
+        logger.error(f"SNS publish failed: {e}")
 
 # Routes
 @app.route('/')
@@ -182,7 +171,6 @@ def cart():
     return render_template('cart.html', cart=cart, total=total)
 
 @app.route('/checkout', methods=['GET', 'POST'])
-@require_role('user')
 def checkout():
     if request.method == 'POST':
         name = request.form['name']
@@ -217,14 +205,6 @@ def checkout():
 def success():
     return render_template('success.html')
 
-@app.errorhandler(404)
-def not_found(e):
-    return render_template("404.html"), 404
-
-@app.errorhandler(500)
-def internal_error(e):
-    return render_template("500.html"), 500
-
-# Run
+# Run the application
 if __name__ == '__main__':
     app.run(debug=True)
