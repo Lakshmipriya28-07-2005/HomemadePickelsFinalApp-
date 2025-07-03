@@ -1,38 +1,52 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, request, session, redirect, url_for, render_template, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import boto3
 import uuid
 import os
 from dotenv import load_dotenv
 import json
+import logging
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-
+# Load .env
 load_dotenv()
 
-# App Initialization
+# Flask App Initialization
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'secret')
 
 # AWS Config
 REGION = os.getenv('AWS_REGION_NAME', 'us-east-1')
-
-# DynamoDB Setup
-dynamodb = boto3.resource('dynamodb', region_name=REGION)
-users_table = dynamodb.Table(os.getenv('USERS_TABLE_NAME'))
-orders_table = dynamodb.Table(os.getenv('ORDERS_TABLE_NAME'))
-
-# SNS Setup
+USERS_TABLE_NAME = os.getenv('USERS_TABLE_NAME')
+ORDERS_TABLE_NAME = os.getenv('ORDERS_TABLE_NAME')
 ENABLE_SNS = os.getenv('ENABLE_SNS', 'False').lower() == 'true'
-sns_topic_arn = os.getenv('SNS_TOPIC_ARN')
+SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN')
+
+# Email Config
+ENABLE_EMAIL = os.getenv('ENABLE_EMAIL', 'False').lower() == 'true'
+SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+SMTP_PORT = int(os.getenv('SMTP_PORT', 587))
+SENDER_EMAIL = os.getenv('SENDER_EMAIL')
+SENDER_PASSWORD = os.getenv('SENDER_PASSWORD')
+
+# AWS Resources
+dynamodb = boto3.resource('dynamodb', region_name=REGION)
+users_table = dynamodb.Table(USERS_TABLE_NAME)
+orders_table = dynamodb.Table(ORDERS_TABLE_NAME)
 sns_client = boto3.client('sns', region_name=REGION)
 
-# Dummy product data
+# Logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Dummy Product Data
 products = {
-        'veg': [
+    'veg': [
         {'name': 'Mango Pickle', 'price': 150, 'weight': '500g', 'image': 'veg_pickles/mango.jpg', 'stock': True},
         {'name': 'Lemon Pickle', 'price': 120, 'weight': '500g', 'image': 'veg_pickles/lemon.jpg', 'stock': False},
     ],
-
     'nonveg': [
         {'name': 'Chicken Pickle', 'price': 300, 'weight': '500g', 'image': 'non_veg_pickles/chicken.jpg', 'stock': True},
         {'name': 'Fish Pickle', 'price': 250, 'weight': '500g', 'image': 'non_veg_pickles/fish.jpg', 'stock': True},
@@ -43,7 +57,55 @@ products = {
     ]
 }
 
+# Helper Functions
+def send_email(to_email, subject, body):
+    if not ENABLE_EMAIL:
+        logger.info("[Email Skipped] " + subject)
+        return
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
 
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        server.sendmail(SENDER_EMAIL, to_email, msg.as_string())
+        server.quit()
+
+        logger.info(f"Email sent to {to_email}")
+    except Exception as e:
+        logger.error("Email sending failed: " + str(e))
+
+def publish_to_sns(message, subject="New Order"):
+    if not ENABLE_SNS:
+        logger.info("[SNS Skipped] " + message)
+        return
+    try:
+        sns_client.publish(
+            TopicArn=SNS_TOPIC_ARN,
+            Message=message,
+            Subject=subject
+        )
+        logger.info("SNS message published.")
+    except Exception as e:
+        logger.error("SNS publish failed: " + str(e))
+
+def require_role(role='user'):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if 'user' not in session:
+                flash("Login required", "warning")
+                return redirect(url_for('login'))
+            # You can add more checks if you store roles in DynamoDB
+            return func(*args, **kwargs)
+        wrapper.__name__ = func.__name__
+        return wrapper
+    return decorator
+
+# Routes
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -64,6 +126,7 @@ def signup():
             'username': username,
             'password': password
         })
+        logger.info(f"New user signed up: {email}")
         return redirect(url_for('login'))
     return render_template('signup.html')
 
@@ -80,7 +143,6 @@ def login():
         session['user'] = email
         session['cart'] = []
         return redirect(url_for('index'))
-
     return render_template('login.html')
 
 @app.route('/logout')
@@ -111,7 +173,6 @@ def add_to_cart():
 
     session['cart'].append({'name': name, 'price': price, 'quantity': quantity})
     session.modified = True
-
     return redirect(url_for('cart'))
 
 @app.route('/cart')
@@ -121,6 +182,7 @@ def cart():
     return render_template('cart.html', cart=cart, total=total)
 
 @app.route('/checkout', methods=['GET', 'POST'])
+@require_role('user')
 def checkout():
     if request.method == 'POST':
         name = request.form['name']
@@ -132,7 +194,6 @@ def checkout():
         if not cart:
             return redirect(url_for('cart'))
 
-        # Save to DynamoDB
         order_id = str(uuid.uuid4())
         orders_table.put_item(Item={
             'order_id': order_id,
@@ -144,23 +205,26 @@ def checkout():
             'address': address
         })
 
-        # Optional SNS Notification
-        if ENABLE_SNS and sns_topic_arn:
-            message = f"New Order from {name} ({email})\nOrder ID: {order_id}\nItems: {json.dumps(cart)}"
-            sns_client.publish(
-                TopicArn=sns_topic_arn,
-                Message=message,
-                Subject="New Order Received"
-            )
+        message = f"New Order from {name} ({email})\nOrder ID: {order_id}\nItems: {json.dumps(cart)}"
+        publish_to_sns(message)
+        send_email(email, "Order Confirmation", f"Thank you for your order!\n\n{message}")
 
         session['cart'] = []
         return redirect(url_for('success'))
-
     return render_template('checkout.html')
 
 @app.route('/success')
 def success():
     return render_template('success.html')
 
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("404.html"), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    return render_template("500.html"), 500
+
+# Run
 if __name__ == '__main__':
     app.run(debug=True)
