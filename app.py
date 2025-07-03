@@ -19,8 +19,8 @@ app.secret_key = os.getenv('SECRET_KEY', 'secret')
 
 # AWS Config
 REGION = os.getenv('AWS_REGION_NAME', 'us-east-1')
-USERS_TABLE_NAME = os.getenv('USERS_TABLE_NAME')
-ORDERS_TABLE_NAME = os.getenv('ORDERS_TABLE_NAME')
+USERS_TABLE_NAME = os.getenv('USERS_TABLE_NAME')  # Must have partition key: email (String)
+ORDERS_TABLE_NAME = os.getenv('ORDERS_TABLE_NAME')  # Must have partition key: order_id (String)
 
 # Email Config
 ENABLE_EMAIL = os.getenv('ENABLE_EMAIL', 'False').lower() == 'true'
@@ -106,6 +106,7 @@ def signup():
         email = request.form['email']
         password = generate_password_hash(request.form['password'])
 
+        # DynamoDB Users table: Partition Key = email (String)
         existing = users_table.get_item(Key={'email': email})
         if 'Item' in existing:
             return render_template('signup.html', error="User already exists")
@@ -182,7 +183,7 @@ def checkout():
         if not cart:
             return redirect(url_for('cart'))
 
-        order_id = str(uuid.uuid4())
+        order_id = str(uuid.uuid4())  # Used as Partition Key for Orders table
         orders_table.put_item(Item={
             'order_id': order_id,
             'user_email': session['user'],
