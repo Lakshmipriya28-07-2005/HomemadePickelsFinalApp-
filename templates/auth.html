@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="row shadow-lg rounded-3 overflow-hidden">
+                <!-- Login Form -->
+                <div class="col-lg-6 p-5 bg-white">
+                    <h2 class="text-center mb-4">
+                        <i class="fas fa-sign-in-alt text-primary"></i> Welcome Back
+                    </h2>
+                    <p class="text-center text-muted mb-4">Sign in to your account</p>
+                    
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <div class="mb-3">
+                            <label for="login-username" class="form-label">
+                                <i class="fas fa-user"></i> Username
+                            </label>
+                            <input type="text" class="form-control" id="login-username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password" class="form-label">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <input type="password" class="form-control" id="login-password" name="password" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt"></i> Sign In
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted">Don't have an account? <a href="#" onclick="showRegister()" class="text-primary">Create one here</a></p>
+                    </div>
+                </div>
+
+                <!-- Register Form -->
+                <div class="col-lg-6 p-5" style="background: linear-gradient(135deg, #ff6b6b, #4ecdc4);">
+                    <h2 class="text-center mb-4 text-white">
+                        <i class="fas fa-user-plus"></i> Join Our Family
+                    </h2>
+                    <p class="text-center text-white mb-4">Create your account to start shopping</p>
+                    
+                    <form method="POST" action="{{ url_for('register') }}">
+                        <div class="mb-3">
+                            <label for="register-username" class="form-label text-white">
+                                <i class="fas fa-user"></i> Username
+                            </label>
+                            <input type="text" class="form-control" id="register-username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-email" class="form-label text-white">
+                                <i class="fas fa-envelope"></i> Email
+                            </label>
+                            <input type="email" class="form-control" id="register-email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-password" class="form-label text-white">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <input type="password" class="form-control" id="register-password" name="password" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-light btn-lg">
+                                <i class="fas fa-user-plus"></i> Create Account
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-white">Already have an account? <a href="#" onclick="showLogin()" class="text-white"><u>Sign in here</u></a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-5 fw-bold mb-4">Why Join Grandma's Pickle Paradise?</h2>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="mb-3">
+                    <i class="fas fa-shipping-fast text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h5>Fast Delivery</h5>
+                <p class="text-muted">Get your favorite pickles delivered fresh to your doorstep within 24 hours.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="mb-3">
+                    <i class="fas fa-shield-alt text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h5>Quality Guarantee</h5>
+                <p class="text-muted">100% satisfaction guarantee or your money back. We stand by our quality.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="mb-3">
+                    <i class="fas fa-heart text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h5>Made with Love</h5>
+                <p class="text-muted">Every jar is handcrafted with traditional recipes and premium ingredients.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showRegister() {
+        // Add visual feedback for form switching
+        document.querySelector('.col-lg-6:first-child').style.animation = 'pulse 0.5s ease';
+    }
+    
+    function showLogin() {
+        // Add visual feedback for form switching
+        document.querySelector('.col-lg-6:last-child').style.animation = 'pulse 0.5s ease';
+    }
+    
+    // Add form validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('form');
+        
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const inputs = form.querySelectorAll('input[required]');
+                let valid = true;
+                
+                inputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        valid = false;
+                        input.classList.add('is-invalid');
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+                
+                if (!valid) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+
+<style>
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+</style>
+{% endblock %}

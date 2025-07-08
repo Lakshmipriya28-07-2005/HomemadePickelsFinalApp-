@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Welcome to Grandma's Pickle Paradise</h1>
+                <p class="lead mb-4">Discover the authentic taste of traditional homemade pickles and snacks, crafted with love using age-old family recipes.</p>
+                <a href="{{ url_for('auth') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket"></i> Get Started
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <img src="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=250&h=200&fit=crop" 
+                             alt="Mango Pickle" class="img-fluid rounded shadow">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=250&h=200&fit=crop" 
+                             alt="Lemon Pickle" class="img-fluid rounded shadow">
+                    </div>
+                    <div class="col-6">
+                        <img src="https://images.unsplash.com/photo-1580873435531-d13f5d2e7c5d?w=250&h=200&fit=crop" 
+                             alt="Banana Chips" class="img-fluid rounded shadow">
+                    </div>
+                    <div class="col-6">
+                        <img src="https://images.unsplash.com/photo-1555681618-85c59b645fdc?w=250&h=200&fit=crop" 
+                             alt="Murukku" class="img-fluid rounded shadow">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-5 fw-bold mb-4">Why Choose Our Homemade Delicacies?</h2>
+            <p class="lead mb-5">Every jar tells a story of tradition, every bite brings back memories of home-cooked goodness.</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-heart text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">Made with Love</h5>
+                    <p class="card-text">Every product is carefully handcrafted using traditional methods passed down through generations.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-leaf text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">100% Natural</h5>
+                    <p class="card-text">No artificial preservatives, colors, or flavors. Just pure, natural ingredients for authentic taste.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-shipping-fast text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="card-title">Fresh Delivery</h5>
+                    <p class="card-text">Direct from our kitchen to your doorstep, ensuring maximum freshness and quality.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-5 fw-bold mb-4">Featured Products</h2>
+            <p class="lead mb-5">A taste of our most popular homemade pickles and snacks</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <img src="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&h=200&fit=crop" 
+                     class="card-img-top product-image" alt="Mango Pickle">
+                <div class="card-body">
+                    <h5 class="card-title">Mango Pickle</h5>
+                    <p class="card-text">Traditional spicy mango pickle</p>
+                    <span class="price-tag">₹150</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100">
+                <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop" 
+                     class="card-img-top product-image" alt="Lemon Pickle">
+                <div class="card-body">
+                    <h5 class="card-title">Lemon Pickle</h5>
+                    <p class="card-text">Tangy lemon pickle with aromatic spices</p>
+                    <span class="price-tag">₹120</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100">
+                <img src="https://images.unsplash.com/photo-1580873435531-d13f5d2e7c5d?w=300&h=200&fit=crop" 
+                     class="card-img-top product-image" alt="Banana Chips">
+                <div class="card-body">
+                    <h5 class="card-title">Banana Chips</h5>
+                    <p class="card-text">Crispy homemade banana chips</p>
+                    <span class="price-tag">₹80</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100">
+                <img src="https://images.unsplash.com/photo-1555681618-85c59b645fdc?w=300&h=200&fit=crop" 
+                     class="card-img-top product-image" alt="Murukku">
+                <div class="card-body">
+                    <h5 class="card-title">Murukku</h5>
+                    <p class="card-text">Traditional South Indian spiral snack</p>
+                    <span class="price-tag">₹100</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mt-5">
+        <a href="{{ url_for('auth') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-bag"></i> Shop Now
+        </a>
+    </div>
+</div>
+
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-5 fw-bold mb-4">Ready to Experience Authentic Flavors?</h2>
+                <p class="lead mb-4">Join thousands of happy customers who have made our homemade pickles and snacks a part of their daily meals.</p>
+                <a href="{{ url_for('auth') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-user-plus"></i> Join Our Family
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center mb-4">
+                            <h3 class="display-6 fw-bold text-primary">5000+</h3>
+                            <p>Happy Customers</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center mb-4">
+                            <h3 class="display-6 fw-bold text-success">15+</h3>
+                            <p>Varieties</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h3 class="display-6 fw-bold text-warning">4.9★</h3>
+                            <p>Customer Rating</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <h3 class="display-6 fw-bold text-danger">100%</h3>
+                            <p>Natural</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add some interactive animations
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate cards on scroll
+        const cards = document.querySelectorAll('.card');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.6s ease forwards';
+                }
+            });
+        });
+        
+        cards.forEach(card => {
+            observer.observe(card);
+        });
+    });
+</script>
+
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}

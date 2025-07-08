@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="display-4 fw-bold text-center mb-5">
+                <i class="fas fa-shopping-cart text-primary"></i> Your Shopping Cart
+            </h1>
+
+            {% if cart_items %}
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-list"></i> Cart Items</h4>
+                </div>
+                <div class="card-body p-0">
+                    {% for item in cart_items %}
+                    <div class="row align-items-center border-bottom p-3 cart-item">
+                        <div class="col-md-2">
+                            <img src="{{ products[item.id|int].image }}"
+                                 class="img-fluid rounded cart-item-image"
+                                 alt="{{ item.name }}">
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="mb-1">{{ item.name }}</h5>
+                            <p class="text-muted mb-0">{{ products[item.id|int].description }}</p>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <div class="quantity-controls">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity({{ item.id }}, -1)">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span class="mx-2 fw-bold">{{ item.quantity }}</span>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity({{ item.id }}, 1)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <span class="price-tag">₹{{ item.price }}</span>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <span class="fw-bold text-success">₹{{ item.subtotal }}</span>
+                            <br>
+                            <a href="{{ url_for('remove_from_cart', product_id=item.id) }}"
+                               class="btn btn-sm btn-outline-danger mt-2"
+                               onclick="return confirm('Remove this item from cart?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="mb-0">
+                                <i class="fas fa-calculator text-primary"></i> Total:
+                                <span class="text-success">₹{{ total }}</span>
+                            </h4>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <a href="{{ url_for('show_products') }}" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-arrow-left"></i> Continue Shopping
+                            </a>
+                            <a href="{{ url_for('checkout') }}" class="btn btn-success btn-lg">
+                                <i class="fas fa-credit-card"></i> Proceed to Checkout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-receipt"></i> Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Items:</strong> {{ cart_items|length }}</p>
+                            <p><strong>Subtotal:</strong> ₹{{ total }}</p>
+                            <p><strong>Shipping:</strong> <span class="text-success">Free</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Tax:</strong> ₹0</p>
+                            <p><strong>Discount:</strong> -₹0</p>
+                            <hr>
+                            <h5><strong>Total:</strong> <span class="text-success">₹{{ total }}</span></h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- Empty Cart -->
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart text-muted" style="font-size: 5rem;"></i>
+                <h2 class="mt-4 text-muted">Your cart is empty</h2>
+                <p class="text-muted mb-4">Looks like you haven't added any items to your cart yet.</p>
+                <a href="{{ url_for('show_products') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-shopping-bag"></i> Start Shopping
+                </a>
+            </div>
+
+            <!-- Suggested Products -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <h3 class="text-center mb-4">You might also like</h3>
+                    <div class="row g-4">
+                        {% for product_id, product in products.items() %}
+                        {% if loop.index <= 4 %}
+                        <div class="col-md-3">
+                            <div class="card h-100">
+                                <img src="{{ product.image }}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="{{ product.name }}">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ product.name }}</h6>
+                                    <p class="text-muted small">{{ product.description[:50] }}...</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="price-tag">₹{{ product.price }}</span>
+                                        <a href="{{ url_for('add_to_cart', product_id=product_id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                <p class="mb-0">Updating cart...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateQuantity(productId, change) {
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        loadingModal.show();
+
+        setTimeout(() => {
+            if (change > 0) {
+                const url = `/add_to_cart/${productId}`;
+                window.location.href = url;
+            } else {
+                alert('Decrease quantity is not implemented yet.');
+            }
+            loadingModal.hide();
+        }, 500);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const cartItems = document.querySelectorAll('.cart-item');
+
+        cartItems.forEach((item, index) => {
+            item.style.animation = `slideInLeft 0.5s ease ${index * 0.1}s forwards`;
+            item.style.opacity = '0';
+        });
+
+        cartItems.forEach(item => {
+            item.addEventListener('mouseenter', function () {
+                this.style.backgroundColor = '#f8f9fa';
+                this.style.transform = 'translateX(5px)';
+            });
+            item.addEventListener('mouseleave', function () {
+                this.style.backgroundColor = 'transparent';
+                this.style.transform = 'translateX(0)';
+            });
+        });
+
+        document.querySelectorAll('.btn-primary').forEach(button => {
+            button.addEventListener('click', function (e) {
+                if (this.querySelector('.fa-plus')) {
+                    e.preventDefault();
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    this.disabled = true;
+
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-check"></i>';
+                        this.classList.remove('btn-primary');
+                        this.classList.add('btn-success');
+
+                        setTimeout(() => {
+                            window.location.href = this.href;
+                        }, 500);
+                    }, 500);
+                }
+            });
+        });
+    });
+</script>
+
+<style>
+    .cart-item { transition: all 0.3s ease; }
+    .cart-item:hover { background-color: #f8f9fa; transform: translateX(5px); }
+    .cart-item-image { height: 80px; object-fit: cover; }
+    .quantity-controls { display: flex; align-items: center; justify-content: center; }
+    .quantity-controls button { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    @keyframes slideInLeft {
+        from { opacity: 0; transform: translateX(-30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .price-tag { font-size: 0.9rem; padding: 3px 8px; }
+    .card { border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .card-header { border-bottom: none; }
+    .card-footer { border-top: 2px solid #dee2e6; }
+</style>
+{% endblock %}
